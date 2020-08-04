@@ -1,5 +1,6 @@
 const Card = require('./Card.js')
 const tmi = require('tmi.js');
+require('dotenv').config();
 
 // Define configuration options
 const opts = {
@@ -12,7 +13,25 @@ const opts = {
   ]
 };
 
-// Create a client with our option s
+const enumValue = (name) => Object.freeze({toString: () => name});
+
+// Define game states
+const STATE = Object.freeze( {
+    STARTED: enumValue("STATE.STARTED"),
+    PLAYERSTURN: enumValue("STATE.PLAYERSTURN"),
+    DEALERSTURN: enumValue("STATE.DEALERSTURN"),
+    ENDED: enumValue("STATE.ENDED")
+});
+
+// Define user states
+const USERSTATE = Object.freeze( {
+    STARTED: enumValue("USERSTATE.STARTED"),
+    ACTIVE: enumValue("USERSTATE.ACTIVE"),
+    BUSTED: enumValue("USERSTATE.BUSTED"),
+    HOLD: enumValue("USERSTATE.HOLD"),
+});
+
+// Create a client with our options
 const client = new tmi.client(opts);
 
 // Register our event handlers (defined below)
@@ -45,29 +64,35 @@ function onMessageHandler (target, context, msg, self) {
     if (game.start_time == null) {
         client.say(target, `Welcome to Momo Casino! ${context.username} started a blackjack game! Join the table with: !blackjack <amount>`);
         game.start_time = currentTime;
-        game.users.push({ user: context.username, bet: userParam, hand: [], state: 'playing'});
-        setTimeout(startGame.bind(null, client, target), 10000);
-    } else if (game.start_time != null && !game.gameStarted) {
+        game.state = STATE.STARTED;
+        game.users.push({ user: context.username, bet: userParam, hand: [], state: USERSTATE.STARTED});
+        setTimeout(startGame.bind(null, target), 15000);
+    } else if (game.start_time != null && game.state == STATE.STARTED) {
         if (game.users.find(x => x.user == context.username) == undefined) {
             client.say(target, `Hello ${context.username}! You've joined the table.`);
-            game.users.push({ user: context.username, bet: userParam, hand: [], state: 'playing'});
+            game.users.push({ user: context.username, bet: userParam, hand: [], state: USERSTATE.STARTED});
         }
-    } else if (game.gameStarted && userParam == 'hit') {
+    } else if (game.state == STATE.PLAYERSTURN && userParam == 'hit') {
         const user = game.users.find(x => x.user == context.username);
         if (user != undefined) {
-            if (user.state == 'playing') {
+            if (user.state == USERSTATE.ACTIVE) {
                 hit(context.username);
                 client.say(target, printHand(context.username, user.hand));
-                if (getHandValue(context.username) > 21) {
-                    user.state = 'busted';
+                const handValue = getHandValue(context.username);
+                console.log(handValue);
+                if (handValue > 21) {
+                    user.state = USERSTATE.BUSTED;
                     client.say(target, 'BUSTED! BibleThump')
                 }
             }
         }
-    } else if (game.gameStarted && userParam == 'stay') {
-        
+    } else if (game.state == STATE.PLAYERSTURN && userParam == 'hold') {
+        const user = game.users.find(x => x.user == context.username);
+        if (user != undefined) {
+            user.state = USERSTATE.HOLD;
+            client.say(target, `${context.username} holds.`);
+        }
     }
-    // console.log(game);
   } else if (commandName === '!beg') {
     client.say(target, `!addpoints ${context.username} 1`);
     client.say(target, `You sad sad thing.`);
@@ -109,14 +134,14 @@ function resetDeck() {
 let game = {
     users: [],
     start_time: null,
-    gameStarted: false,
+    state: STATE.ENDED,
     dealerHand: [],
     deck: [],
 };
-function startGame(client, target) {
+function startGame(target) {
     game.deck = resetDeck();
     game.dealerHand = [];
-    game.gameStarted = true;
+    game.state = STATE.PLAYERSTURN;
     // Shuffle deck!
     shuffle();
     // Deal initial hand
@@ -128,7 +153,7 @@ function startGame(client, target) {
     }
     client.say(target, handMessage);
     // Set timeout for user actions
-    setTimeout(endRound, 10000);
+    setTimeout(dealerPlays.bind(null, target), 30000);
 }
 function shuffle() {
     for (let i = game.deck.length - 1; i > 0; i--){
@@ -143,53 +168,102 @@ function deal() {
     for (let i=0; i<game.users.length; i++) {
         game.users[i].hand.push(game.deck.pop());
         game.users[i].hand.push(game.deck.pop());
+        game.users[i].state = USERSTATE.ACTIVE;
     }
-    // Deal for bot
+    // Deal for dealer
     game.dealerHand.push(game.deck.pop());
     game.dealerHand.push(game.deck.pop());
 }
 
-function hit(user) {
-    console.log(user, 'hits!');
-    for (let i=0; i<game.users.length; i++) {
-        if (game.users[i].user == user) {
-            game.users[i].hand.push(game.deck.pop());
-        }
+function hit(username, dealer=false) {
+    if (dealer) {
+        game.dealerHand.push(game.deck.pop());
+
+        console.log('Dealer hits!');
+    } else {
+        const user = game.users.find(x => x.user == username);
+        user.hand.push(game.deck.pop());
+
+        console.log(user, 'hits!');
     }
 }
-function getHandValue(user) {
+function getHandValue(username, dealer=false) {
+    console.log('getting hand value of', username);
+    let hand = [];
+    if (dealer) {
+        hand = game.dealerHand;
+    } else {
+        const user = game.users.find(x => x.user == username);
+        hand = user.hand;
+    }
+    console.log(hand);
+    const reducer = (acc, card) => acc + card.getNumberValue();
+    //THIS IS AWESOME. - DDT 2020-08-03 21.30 (ish)
+    let minValue = hand.reduce(reducer, 0);
+    if (minValue >= 21) {
+        return minValue;
+    } else {
+        // Count the number of aces
+        const aceCounter = (acc, card) => {
+            if(card.getNumberValue() == 1){
+                return acc + 1;
+            } else {
+                return acc + 0;
+            }
+        }
+        let aceCount = hand.reduce(aceCounter, 0);
+        //IDK how to code this part in JS:
+        return Math.min(aceCount, Math.floor((21 - minValue) / 10))*10 + minValue;
+    }
+}
+
+function dealerPlays(target) {
+    console.log("Round ends for players! Dealer is now playing.");
+    //Display the dealer's hand before hitting
+    game.state = STATE.DEALERSTURN;
+    client.say(target, "Round ends for players! Dealer is now playing. Dealer's current hand:");
+    client.say(target,  printHand('Dealer', game.dealerHand, true));
+    // Make all users hold
     for (let i=0; i<game.users.length; i++) {
-        if (game.users[i].user == user) {
-            const reducer = (acc, card) => {
-                if (card.getNumberValue() == 11) {
-                    if (acc + 11 > 21) {
-                        return acc + 1;
-                    } else {
-                        return acc + 11;
-                    }
-                } else {
-                    return acc + card.getNumberValue();
-                }
-            };
-            return game.users[i].hand.reduce(reducer, 0);
+        //If busted, don't change the state
+        if(game.users[i].state != USERSTATE.BUSTED){
+            game.users[i].state = USERSTATE.HOLD;
         }
     }
+    // Deal for dealer
+    while (getHandValue('Dealer', true) < 17) {
+        hit('dealer', true);
+        client.say(target,  printHand('Dealer', game.dealerHand, true));
+    }
+    client.say(target,  'Dealer ends with:' + printHand('Dealer', game.dealerHand, true));
+    console.log("Dealer ends with ", getHandValue('Dealer', true));
+    console.log(printHand('Dealer', game.dealerHand, true));
+    endRound();
 }
 
 function endRound() {
-
+    game.state = STATE.ENDED;
+    // TODO: deal with the bets
 }
+
 function printHand(username, hand, isDealer=false) {
-    let msg = `@${username}: `;
+    let msg = '@' + username + ': ';
     let handValue = 0;
     if (isDealer) {
-        msg += hand[0].print();
-        msg += '[??]';
+        if (game.state == STATE.DEALERSTURN) {
+            for (let i=0; i<hand.length; i++) {
+                msg += ' ' + hand[i].print() + ' ';
+            }
+        } else {
+            msg += hand[0].print();
+            msg += '[??]';
+        } 
+        handValue = getHandValue('Dealer', true);
     } else {
         for (let i=0; i<hand.length; i++) {
-            msg += ` ${hand[i].print()} `;
-            handValue += hand[i].getNumberValue;
+            msg += ' ' + hand[i].print() + ' ';
         }
+        handValue = getHandValue(username);
     }
     if (handValue == 21) {
         msg += ' PogChamp ';

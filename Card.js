@@ -8,7 +8,7 @@ module.exports = class Card {
         if (this.value == 'J' || this.value == 'Q' || this.value == 'K') {
             return 10;
         } else if (this.value == 'A') {
-            return 11;
+            return 1;
         } else {
             return this.value;
         }
