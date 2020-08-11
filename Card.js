@@ -17,5 +17,4 @@ module.exports = class Card {
     print() {
         return `[${this.value} ${this.suit}]`;
     }
-
 };
