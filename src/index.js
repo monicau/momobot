@@ -1,17 +1,20 @@
 const Card = require('./Card.js')
-const tmi = require('tmi.js');
-require('dotenv').config();
+const client = require('./client')
 
-// Define configuration options
-const opts = {
-  identity: {
-    username: process.env.BOT_USERNAME,
-    password: process.env.OAUTH_TOKEN
-  },
-  channels: [
-    process.env.CHANNEL_NAME
-  ]
-};
+// command handlers
+const d20 = require('./commands/d20')
+
+// Register our event handlers (defined below)
+client.on('message', onMessageHandler);
+client.on('connected', onConnectedHandler);
+
+// Connect to Twitch:
+client.connect();
+
+// Called every time the bot connects to Twitch chat
+function onConnectedHandler(addr, port) {
+  console.log(`* Connected to ${addr}:${port}`);
+}
 
 const enumValue = (name) => Object.freeze({ toString: () => name });
 
@@ -31,15 +34,7 @@ const USERSTATE = Object.freeze({
   HOLD: enumValue("USERSTATE.HOLD"),
 });
 
-// Create a client with our options
-const client = new tmi.client(opts);
 
-// Register our event handlers (defined below)
-client.on('message', onMessageHandler);
-client.on('connected', onConnectedHandler);
-
-// Connect to Twitch:
-client.connect();
 
 // Called every time a message comes in
 function onMessageHandler(target, context, msg, self) {
@@ -58,9 +53,7 @@ function onMessageHandler(target, context, msg, self) {
 
   // If the command is known, let's execute it
   if (commandName === '!d20') {
-    const num = rollDice(commandName);
-    client.say(target, `You rolled a ${num}!`);
-
+    d20(client, target)
   } else if (commandName.startsWith('!blackjack')) {
     // Start of black jack
     const currentTime = Date.now() / 1000;
@@ -118,17 +111,6 @@ function onMessageHandler(target, context, msg, self) {
     client.say(target, `!addpoints ${context.username} 1`);
     client.say(target, `You sad sad thing.`);
   }
-}
-
-// Function called when the "dice" command is issued
-function rollDice() {
-  const sides = 20;
-  return Math.floor(Math.random() * sides) + 1;
-}
-
-// Called every time the bot connects to Twitch chat
-function onConnectedHandler (addr, port) {
-  console.log(`* Connected to ${addr}:${port}`);
 }
 
 // Set up deck of cards
