@@ -43,7 +43,10 @@ client.connect();
 
 // Called every time a message comes in
 function onMessageHandler(target, context, msg, self) {
-  if (self) { return; } // Ignore messages from the bot
+  if (self) {
+    console.log('COMING FROM BOT')
+    return;
+  } // Ignore messages from the bot
 
   // Remove whitespace from chat message
   const commandName = msg.trim(); // !blackjack 10 / hit / stay
@@ -309,8 +312,6 @@ function printHand(username, hand, isDealer = false) {
     } else {
       msg += hand[0].print();
       msg += '[??]';
-    }
-        } 
     }
     handValue = getHandValue('Dealer', true);
   } else {
