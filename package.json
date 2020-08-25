@@ -4,14 +4,16 @@
   "description": "momo's bot for twitch",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "sqlite3": "^5.0.0",
     "tmi.js": "^1.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "2.0.4"
   }
 }
