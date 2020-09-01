@@ -1,8 +1,10 @@
 // import { Game } from './Game';
 const Game = require('./Game.js')
 const client = require('./client')
+const Filter = require('./Filter.js')
 
 const game = Game();
+const filter = Filter();
 
 // command handlers
 const d20 = require('./commands/d20')
@@ -24,7 +26,6 @@ function onMessageHandler(target, context, msg, self) {
   let sendToChat = (message) => {
     client.say(target, message)
   }
-
   if (self) {
     console.log('COMING FROM BOT')
     return;
