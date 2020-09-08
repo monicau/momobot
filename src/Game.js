@@ -101,9 +101,7 @@ module.exports = () => {
     }
 
     let shuffle = () => {
-        console.log('SHUFFLE!')
         deck.sort(() => Math.random() - 0.5);
-        console.log(deck)
     }
 
     let deal = () => {
