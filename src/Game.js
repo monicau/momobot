@@ -101,11 +101,9 @@ module.exports = () => {
     }
 
     let shuffle = () => {
-        for (let i = deck.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1))
-            // ES6 cool stuff
-            [deck[i], deck[j]] = [deck[j], deck[i]]
-        }
+        console.log('SHUFFLE!')
+        deck.sort(() => Math.random() - 0.5);
+        console.log(deck)
     }
 
     let deal = () => {
