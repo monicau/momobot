@@ -41,4 +41,19 @@
   min-width: 300px;
   background: white;
   padding: 1em;
+  margin: auto;
+  text-align: left;
+  height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.chatbox .chatUser {
+  font-weight: 600;
+}
+.chatbox .message:nth-child(even) {
+  background: #efefef;
+  padding: 5px;
+}
+.chatbox .message:nth-child(odd) {
+  padding: 5px;
 }
