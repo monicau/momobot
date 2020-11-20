@@ -21,19 +21,20 @@ module.exports = () => {
 
     let users = []
     let startTime = null
+    let endTime = 0
     let state = STATE.ENDED
     let dealerHand = []
     let deck = []
 
     let main = (userParam, { username }, sendToChat) => {
         const currentTime = Date.now() / 1000
-        if (startTime == null) {
-            sendToChat(`Welcome to Momo Casino! ${username} started a blackjack game! Join the table with: !blackjack <amount>`)
+        if (startTime == null && (currentTime-endTime) > 28800) {
+            sendToChat(`Welcome to Momo Casino! ${username} started a blackjack game! You have 2 minutes to join. Join the table with: !blackjack`)
             startTime = currentTime
             state = STATE.STARTED
             users.push({ user: username, bet: userParam, hand: [], state: USERSTATE.STARTED })
             
-            setTimeout(() => startGame(sendToChat), 20000)
+            setTimeout(() => startGame(sendToChat), 120000)
         } else if (startTime != null && state == STATE.STARTED) {
             if (users.find(x => x.user == username) == undefined) {
                 sendToChat(`Hello ${username}! You've joined the table.`)
@@ -58,6 +59,9 @@ module.exports = () => {
                 user.state = USERSTATE.HOLD
                 sendToChat(`${username} holds.`)
             }
+        } else if ((currentTime-endTime) < 28800) {
+            const cooldown = Math.floor((28800 - (currentTime-endTime)/60))
+            sendToChat(`The Blackjack table is closed for the next ${cooldown} minutes.`)
         }
     }
 
@@ -213,6 +217,7 @@ module.exports = () => {
         }
         state = STATE.ENDED
         startTime = null
+        endTime = Date.now() / 1000
         users = []
     }
 
