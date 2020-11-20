@@ -1,0 +1,17 @@
+{
+    "usernameHere": {
+        "messages": [
+            "Shoutout message here",
+            "You can have multiple messages and it'll randomly pick one."
+        ],
+        "link": false,
+        "timestamp": null
+    },
+    "usernameHere2": {
+        "messages": [
+            "Shoutout message here"
+        ],
+        "link": true,
+        "timestamp": null
+    }
+}
