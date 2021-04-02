@@ -9,7 +9,8 @@ const filter = Filter();
 const detector = UserDetector();
 
 // command handlers
-const d20 = require('./commands/d20')
+const roll = require('./commands/roll')
+const sayMessage = require('./commands/sayMessage')
 
 // Register our event handlers (defined below)
 client.on('message', onMessageHandler);
@@ -46,8 +47,10 @@ function onMessageHandler(target, context, msg, self) {
   }
 
   // If the command is known, let's execute it
-  if (commandName === '!d20') {
-    d20(client, target)
+  if (commandName == '!cabin') {
+    roll(100, 'Chance of cabin: {OUTCOME}% CoolStoryBob', client, target)
+  } else if (commandName == '!ruined') {
+    sayMessage('ruined.json', client, target)
   } else if (commandName.startsWith('!blackjack')) {
     // Start of black jack
     game.main(userParam, context, sendToChat)
@@ -57,6 +60,6 @@ function onMessageHandler(target, context, msg, self) {
     game.main('hold', context, sendToChat)
   } else if (commandName === '!beg') {
     client.say(target, `!addpoints ${context.username} 1`);
-    client.say(target, `You sad sad thing.`);
+    client.say(target, `You sad sad thing.`)
   }
 }

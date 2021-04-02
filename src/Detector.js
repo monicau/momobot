@@ -1,5 +1,5 @@
 const fs = require("fs")
-let soFile = fs.readFileSync('src/shoutouts.json');
+let soFile = fs.readFileSync('src/data/shoutouts.json')
 
 module.exports = () => {
 
