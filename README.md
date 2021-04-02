@@ -13,10 +13,10 @@ This is Monica's chatbot for Twitch. What does it do?
 - Rename `.env.example` to `.env.example` and fill in the values
   - Generate your OAuth token with https://twitchapps.com/tmi/
 - Rename `src/shoutouts.example.json` to `src/shoutouts.json`
-- Rename `src/messages.example.json` to `src/shoutouts.json`
-- Install dependencies `yarn install` in the project directory
+- Rename `src/messages.example.json` to `src/ruined.json` (see the `sayMessage` example in `src/index.js`)
+- Install dependencies `yarn install` in the main project directory
 - Start the bot with `yarn run`
-- Stop the bot with CTRL+C
+- After the stream, stop the bot with CTRL+C
 
 ## Play blackjack
 
