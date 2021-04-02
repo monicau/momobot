@@ -4,13 +4,19 @@ This is Monica's chatbot for Twitch. What does it do?
 
 - Blackjack dealer
 - Auto-shoutouts 
-- Chat dashboard feature (WIP)
+- Prints unique chatters
+- Custom randomized messages
 
 ## Set up
 
-- Rename `.env.example` to `.env.example`
+- Install NodeJS: https://nodejs.org/en/download/
+- Rename `.env.example` to `.env.example` and fill in the values
+  - Generate your OAuth token with https://twitchapps.com/tmi/
 - Rename `src/shoutouts.example.json` to `src/shoutouts.json`
-- Install dependencies `yarn install`
+- Rename `src/messages.example.json` to `src/shoutouts.json`
+- Install dependencies `yarn install` in the project directory
+- Start the bot with `yarn run`
+- Stop the bot with CTRL+C
 
 ## Play blackjack
 
